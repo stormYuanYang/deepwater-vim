@@ -31,8 +31,10 @@ Plugin 'godlygeek/tabular'
 Plugin 'majutsushi/tagbar'
 Plugin 'jiangmiao/auto-pairs'
 Plugin 'flazz/vim-colorschemes'
-Plugin 'WolfgangMehner/c-support'
+"Plugin 'WolfgangMehner/c-support'
 Plugin 'WolfgangMehner/lua-support'
+Plugin 'tpope/vim-unimpaired'
+Plugin 'tpope/vim-surround'
 " 来自 http://vim-scripts.org/vim/scripts.html 的插件
 " Plugin '插件名称' 实际上是 Plugin 'vim-scripts/插件仓库名' 只是此处的用户名可以省略
 "Plugin 'L9'
@@ -428,7 +430,7 @@ set whichwrap+=h,l,<,>
 
 " 建立F3作为NERDTreeToggle(即树型结构的开关)的快捷键
 " 也就是说按下F3就相当于在是ex command 中执行了打开NERDTree的命令
-map <F3> :NERDTreeToggle<CR>
+nnoremap <F3> :NERDTreeToggle<CR>
 
 "设置NERDTree的窗口信息，包括位置、大小等
 let NERDChristmasTree       = 1
@@ -444,14 +446,16 @@ let NERDTreeWinSize         = 46
 " 建立在窗口之间移动的映射关系
 " "对应于在Buffer中的移动规则h-->左,j-->下,k-->上,l-->右
 " C代表Ctrl键，即按住Ctrl键，再按j、k、h、l进行窗口间的移动
-map <C-j> <C-W>j
-map <C-k> <C-W>k
-map <C-h> <C-W>h
-map <C-l> <C-W>l 
+nnoremap <C-j> <C-W>j
+nnoremap <C-k> <C-W>k
+nnoremap <C-h> <C-W>h
+nnoremap <C-l> <C-W>l 
 
 " 设置j/k在屏幕上移动时的表现,当一行的内容显示不完全时才能正确的移动
+" j基于实际行移动，而gj基于屏幕行移动,etc
 nnoremap j gj
 nnoremap k gk
+nnoremap $ g$
 
 " 设置TagbarToggle的快捷键
 nnoremap <silent> <F4> :TagbarToggle<CR>
@@ -482,14 +486,14 @@ inoremap <expr><Left>  neocomplete#close_popup() . "\<Left>"
 inoremap <expr><Right> neocomplete#close_popup() . "\<Right>"
 inoremap <expr><Up>    neocomplete#close_popup() . "\<Up>"
 inoremap <expr><Down>  neocomplete#close_popup() . "\<Down>"
-map <F10> :NeoCompleteToggle<CR>
+nnoremap <F10> :NeoCompleteToggle<CR>
 
 " 搜索文件<Ctrl-F> 查找已经打开过的文件<Ctrl-B>
 let g:ctrlp_working_path_mode = 0
 let g:ctrlp_map               = '<c-f>'
 let g:ctrlp_max_height        = 24
 let g:ctrlp_custom_ignore     = 'node_modules\|^\.DS_Store\|^\.git\|^\.coffee'
-map <c-b> :CtrlPBuffer<cr>
+nnoremap <c-b> :CtrlPBuffer<cr>
 
 " 在插入模式下设置括号的补全，当输入左边括号时自动输入右边括号，并将光标移动至
 " 括号之间,接下来的{}/[]/""/''是同样的道理
@@ -545,8 +549,8 @@ set magic
 " 到对应的左括号，然后在回到当前位置
 set showmatch
 
-" 设置输入括号时，匹配括号的闪烁时间0.4秒,默认是0.5秒
-set matchtime=4
+" 设置输入括号时，匹配括号的闪烁时间0.3秒,默认是0.5秒
+set matchtime=3
 
 " 设置编码格式为utf8
 set encoding=utf8
@@ -554,14 +558,15 @@ set encoding=utf8
 " 设置unix作为标准文件类型
 set fileformats=unix,dos,mac
 
-" 设置头文件路径
-set path=.,,
+" 设置vim部分搜索命令的文件搜索路径
+set path=.
+set path+=,,
+set path+=./**
 set path+=/usr/include
 set path+=/usr/local/include
-set path+=~/**
 
 " 映射在ex command 中,输入Q回车就是退出vim当前的所有窗口即q(quit)all
-command Q qall 
+command! Q qall 
 
 " 关闭Vim的备份功能 
 set nobackup
@@ -606,7 +611,7 @@ try
 catch
 endtry
 
-" Return to last edit position when opening files (You want this!)
+"恢复到上次关闭文件时光标所在的位置
 autocmd BufReadPost *
             \ if line("'\"") > 0 && line("'\"") <= line("$") |
             \   exe "normal! g`\"" |
@@ -621,10 +626,10 @@ set laststatus=2
 set statusline=\ %{HasPaste()}%F%m%r%h\ %w\ \ CWD:\ %r%{getcwd()}%h\ \ \ Line:\ %l
 
 " 重新映射0为^，0是回到行首，^也是回到行首，但是有细微的差别，你可以试一下就知道 
-map 0 ^
+nnoremap 0 g^
 
 " 重新映射单词表现，输入shijian(即时间的拼音)则将文本替换为格式化的时间
-iab shijian <c-r>=strftime("(%Y年/%m月/%d日 %H时%M分%S秒)")<cr>
+iab shijian <c-r>=strftime("(%Y年%m月%d日 %H时%M分)")<cr>
 
 "not left margin 其实也可以不用设置，本来默认就是0
 set foldcolumn=0
@@ -641,11 +646,9 @@ if has("multi_byte")
     set termencoding=utf-8 
     set formatoptions+=mM 
     set fencs=utf-8,gbk 
-
     "file codings
     set encoding=utf-8
     set fileencodings=ucs-bom,utf-8,cp936,gbk,gb2312
-
     if v:lang =~? '^/(zh/)/|/(ja/)/|/(ko/)' 
         set ambiwidth=double 
     endif 
@@ -672,7 +675,29 @@ let g:syntastic_lua_checkers             = ["luac", "luacheck"]
 let g:syntastic_lua_luacheck_args        = "--no-unused-args"
 
 "" 设置代码针对制定字符对齐(强迫症的福音)
-map <Leader>a :Tabularize /=
+" 让选中行按所有“=”对齐
+nnoremap <Leader>a :Tabularize /=
+" 让选中行只按第一个出现的"="对齐,af取 align first之意
+nnoremap <Leader>af :Tabularize /^[^=]*\zs=
 
-" 设置c.vim中的Leader键
-let g:C_MapLeader  = ","
+let g:Lua_MapLeader = ','
+
+"添加package matchit
+packadd! matchit
+autocmd FileType lua let b:match_words = '\<if\>:\<elseif\>:\<else\>:\<end\>,'
+    \ . '\<for\>:\<break\>:\<end\>,'
+    \ . '\<while\>:\<break\>:\<end\>,'
+    \ . '\<function\>:\<end\>'
+autocmd FileType python let b:match_words = '\<if\>:\<elif\>:\<else\>,'
+    \ . '\<for\>:\<continue\>:\<break\>,'
+
+" 固定n/N的搜索方向
+nnoremap <expr> n 'Nn'[v:searchforward]
+nnoremap <expr> N 'nN'[v:searchforward]
+
+" 设置当前行高亮的表现方式(进入窗口时高亮当前行，离开窗口时关闭当前行高亮)
+autocmd WinEnter * set cursorline
+autocmd WinLeave * set nocursorline
+
+" 以超级用户权限保存文件 
+command! W w !sudo tee % > /dev/null
