@@ -35,6 +35,8 @@ Plugin 'flazz/vim-colorschemes'
 Plugin 'WolfgangMehner/lua-support'
 Plugin 'tpope/vim-unimpaired'
 Plugin 'tpope/vim-surround'
+Plugin 'mileszs/ack.vim'
+
 " 来自 http://vim-scripts.org/vim/scripts.html 的插件
 " Plugin '插件名称' 实际上是 Plugin 'vim-scripts/插件仓库名' 只是此处的用户名可以省略
 "Plugin 'L9'
@@ -111,7 +113,7 @@ function! HasPaste()
 endfunction
 
 " Don't close window, when deleting a buffer
-command! Bclose call <SID>BufcloseCloseIt()
+"command! Bclose call <SID>BufcloseCloseIt()
 function! <SID>BufcloseCloseIt()
     let l:currentBufNum   = bufnr("%")
     let l:alternateBufNum = bufnr("#")
@@ -366,7 +368,8 @@ function! CompileAndRunCurrentBuffer()
         let cmd = cmd . "python3 " . fullName
     else
         echohl WarningMsg | 
-                    \ echomsg " Error: Now file type *." . suffixStr . " does not support yet" | 
+                    \ echomsg " Error: Now file type *." 
+                    \ . suffixStr . " does not support yet" | 
                     \ echohl None
         return
     endif
@@ -404,6 +407,53 @@ endfunction
 " 先更新当前Buffer，然后调用函数Run Buffer
 inoremap <F9> <Esc>:update<cr>:call CompileAndRunCurrentBuffer()<cr>
 nnoremap <F9> :update<cr>:call CompileAndRunCurrentBuffer()<cr>
+
+function! QuickfixFilenames()
+    let bufferNumbers = {}
+    for quickfixItem in getqflist()
+        " Quickfix list entries with non-existing buffer number are returned
+        " with "bufnr" set to zero.所以需要跳过所有"bufnr"为0的entry。因为对于
+        " bufname()的参数来说0 is the alternate buffer for the current window.
+        " 所以你会拿到多出来的一个未预期的文件名，这肯定不是我们想要的
+        let itemNo = quickfixItem["bufnr"]
+        if itemNo == 0
+            continue
+        endif
+        let bufferNumbers[itemNo] = bufname(itemNo)
+    endfor
+    let result = join(map(values(bufferNumbers), 'fnameescape(v:val)'))
+    return result
+endfunction
+command! -nargs=0 -bar Qargs execute 'args' QuickfixFilenames()
+
+function! GlobalQuickSubstitutePattern()
+    " 获取quickfix中所有的文件名
+    let quickfixFilenames = QuickfixFilenames()
+    if quickfixFilenames == ""
+        echohl WarningMsg |
+                    \ echomsg "quickfixFilenames is empty" |
+                    \ echohl None
+        return
+    endif
+    " 不允许输入的Old pattern为空字符串
+    let oldPattern = input("Old pattern: ", expand("<cword>"))
+    if oldPattern == ""
+        echohl WarningMsg |
+                    \ echomsg "Old pattern is empty" |
+                    \ echohl None
+        return
+    endif
+    echo "\r"
+    " newPattern是可以为空字符串“”的，这样就表示删除Old pattern
+    let newPattern = input("New pattern: ", expand("<cword>"))
+    echo "\r"
+    " 用quickfix中的文件名，覆盖参数列表
+    execute "args " . quickfixFilenames
+    " 对参数列表中的每一个文件执行substitute命令
+    execute "argdo " . "%substitute/"
+        \ . oldPattern . "/" . newPattern . "/geIl | update"
+endfunction
+nnoremap <F10> :call GlobalQuickSubstitutePattern()<cr>
 " --------------------------------------------- end
 "
 "
@@ -441,7 +491,7 @@ let NERDTreeShowFiles       = 1
 let NERDTreeShowHidden      = 1
 let NERDTreeShowLineNumbers = 1
 let NERDTreeWinPos          = 'left'
-let NERDTreeWinSize         = 46
+let NERDTreeWinSize         = 30
 
 " 建立在窗口之间移动的映射关系
 " "对应于在Buffer中的移动规则h-->左,j-->下,k-->上,l-->右
@@ -459,7 +509,7 @@ nnoremap $ g$
 
 " 设置TagbarToggle的快捷键
 nnoremap <silent> <F4> :TagbarToggle<CR>
-let g:tagbar_width          = 40
+let g:tagbar_width          = 30
 let g:tagbar_autoshowtag    = 1
 let g:tagbar_previewwin_pos = "aboveleft"
 
@@ -470,7 +520,7 @@ let g:tagbar_previewwin_pos = "aboveleft"
 ""let g:Tlist_Exit_OnlyWindow=1
 ""let Tlist_WinWidth=42
 
-" 建立F5作为Grep的快捷键
+" 建立F5作为Regrep的快捷键
 " 默认在打开Vim的当前目录下对所有的文件内容进行模式匹配
 nnoremap <silent> <F5> :Regrep<CR>
 
@@ -486,7 +536,7 @@ inoremap <expr><Left>  neocomplete#close_popup() . "\<Left>"
 inoremap <expr><Right> neocomplete#close_popup() . "\<Right>"
 inoremap <expr><Up>    neocomplete#close_popup() . "\<Up>"
 inoremap <expr><Down>  neocomplete#close_popup() . "\<Down>"
-nnoremap <F10> :NeoCompleteToggle<CR>
+"nnoremap <F10> :NeoCompleteToggle<CR>
 
 " 搜索文件<Ctrl-F> 查找已经打开过的文件<Ctrl-B>
 let g:ctrlp_working_path_mode = 0
@@ -687,7 +737,7 @@ packadd! matchit
 autocmd FileType lua let b:match_words = '\<if\>:\<elseif\>:\<else\>:\<end\>,'
     \ . '\<for\>:\<break\>:\<end\>,'
     \ . '\<while\>:\<break\>:\<end\>,'
-    \ . '\<function\>:\<end\>'
+    \ . '\<function\>:\<end\>,'
 autocmd FileType python let b:match_words = '\<if\>:\<elif\>:\<else\>,'
     \ . '\<for\>:\<continue\>:\<break\>,'
 
