@@ -35,7 +35,7 @@ Plugin 'flazz/vim-colorschemes'
 Plugin 'WolfgangMehner/lua-support'
 Plugin 'tpope/vim-unimpaired'
 Plugin 'tpope/vim-surround'
-Plugin 'mileszs/ack.vim'
+"Plugin 'mileszs/ack.vim'
 
 " 来自 http://vim-scripts.org/vim/scripts.html 的插件
 " Plugin '插件名称' 实际上是 Plugin 'vim-scripts/插件仓库名' 只是此处的用户名可以省略
@@ -352,10 +352,10 @@ function! CompileAndRunCurrentBuffer()
         return
     endif
     let suffixStrLen = (strlen(crtFlNm) - 1) - lastDotIdx
-    let startIdx = lastDotIdx + 1
-    let suffixStr = strcharpart(crtFlNm ,startIdx, suffixStrLen)
-    let outputName = strcharpart(crtFlNm, 0, lastDotIdx) . suffixStr
-    let fullName = expand("%:p")
+    let startIdx     = lastDotIdx + 1
+    let suffixStr    = strcharpart(crtFlNm ,startIdx, suffixStrLen)
+    let outputName   = strcharpart(crtFlNm, 0, lastDotIdx)
+    let fullName     = expand("%:p")
 
     let cmd = ""
     if suffixStr ==? "cpp"
@@ -366,6 +366,8 @@ function! CompileAndRunCurrentBuffer()
         let cmd = cmd . "lua " . fullName
     elseif suffixStr ==? "py"
         let cmd = cmd . "python3 " . fullName
+    elseif suffixStr ==? "java"
+        let cmd = cmd . "javac " . fullName . " && java " . outputName
     else
         echohl WarningMsg | 
                     \ echomsg " Error: Now file type *." 
@@ -505,7 +507,7 @@ nnoremap <C-l> <C-W>l
 " j基于实际行移动，而gj基于屏幕行移动,etc
 nnoremap j gj
 nnoremap k gk
-nnoremap $ g$
+"nnoremap $ g$
 
 " 设置TagbarToggle的快捷键
 nnoremap <silent> <F4> :TagbarToggle<CR>
@@ -676,7 +678,7 @@ set laststatus=2
 set statusline=\ %{HasPaste()}%F%m%r%h\ %w\ \ CWD:\ %r%{getcwd()}%h\ \ \ Line:\ %l
 
 " 重新映射0为^，0是回到行首，^也是回到行首，但是有细微的差别，你可以试一下就知道 
-nnoremap 0 g^
+nnoremap 0 ^
 
 " 重新映射单词表现，输入shijian(即时间的拼音)则将文本替换为格式化的时间
 iab shijian <c-r>=strftime("(%Y年%m月%d日 %H时%M分)")<cr>
@@ -726,14 +728,15 @@ let g:syntastic_lua_luacheck_args        = "--no-unused-args"
 
 "" 设置代码针对制定字符对齐(强迫症的福音)
 " 让选中行按所有“=”对齐
-nnoremap <Leader>a :Tabularize /=
+noremap <Leader>a :Tabularize /=
 " 让选中行只按第一个出现的"="对齐,af取 align first之意
-nnoremap <Leader>af :Tabularize /^[^=]*\zs=
+noremap <Leader>af :Tabularize /^[^=]*\zs=
 
 let g:Lua_MapLeader = ','
 
 "添加package matchit
 packadd! matchit
+"autocmd FileType 
 autocmd FileType lua let b:match_words = '\<if\>:\<elseif\>:\<else\>:\<end\>,'
     \ . '\<for\>:\<break\>:\<end\>,'
     \ . '\<while\>:\<break\>:\<end\>,'
