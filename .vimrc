@@ -754,3 +754,8 @@ autocmd WinLeave * set nocursorline
 
 " 以超级用户权限保存文件 
 command! W w !sudo tee % > /dev/null
+
+nnoremap <silent> [b :bprevious<CR>
+nnoremap <silent> ]b :bnext<CR>
+nnoremap <silent> [B :bfirst<CR>
+nnoremap <silent> ]B :blast<CR>
